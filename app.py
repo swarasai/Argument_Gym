@@ -17,15 +17,57 @@ from metrics import Coach, chunk_db
 from speak import make_record, record
 from topics import CATEGORIES, pick_topic
 
-st.set_page_config(page_title='Argument Gym', page_icon='🥊', layout='wide')
-st.title('🥊 Argument Gym')
-st.caption('Practice thinking on your feet. Your original speaking coach is still available.')
+st.set_page_config(page_title='Argument Gym', layout='wide', initial_sidebar_state='expanded')
+
+st.markdown("""
+<style>
+    #MainMenu, header, footer {visibility: hidden; height: 0;}
+    .stApp {background: #0c0e12;}
+    .block-container {padding-top: 1.4rem; padding-bottom: 2rem; max-width: 1480px;}
+    [data-testid="stSidebar"] {background: #10131a; border-right: 1px solid #252a33;}
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: #9aa0ab;
+    }
+    .app-masthead {margin: 0 0 1.35rem; padding-bottom: 1rem; border-bottom: 1px solid #252a33;}
+    .app-kicker {font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: #8b8070; margin: 0 0 0.35rem;}
+    .app-title {font-size: 1.85rem; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: #f2efe8;}
+    .app-lede {margin: 0.45rem 0 0; color: #9aa0ab; font-size: 0.95rem;}
+    .panel-label {font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: #c4b49a; margin: 0 0 0.2rem;}
+    .panel-title {font-size: 1.15rem; font-weight: 600; color: #f2efe8; margin: 0 0 0.35rem;}
+    .panel-desc {color: #9aa0ab; font-size: 0.9rem; margin: 0 0 0.85rem;}
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background: #15181f;
+        border: 1px solid #2a303a !important;
+        padding: 0.35rem 0.15rem 0.2rem;
+    }
+    div[data-testid="stHorizontalBlock"] {gap: 1rem; align-items: stretch;}
+    .stButton > button {border-radius: 2px; border: 1px solid #3a414d; background: #1c212b; color: #e4e2dc;}
+    .stButton > button[kind="primary"] {background: #c4b49a; color: #14161c; border: 1px solid #c4b49a; font-weight: 600;}
+    .stButton > button[kind="primary"]:hover {background: #d6c4a8; color: #14161c;}
+    [data-testid="stExpander"] {background: #10131a; border: 1px solid #2a303a;}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="app-masthead">
+  <p class="app-kicker">Local debate training</p>
+  <h1 class="app-title">Argument Gym</h1>
+  <p class="app-lede">Spar with an AI opponent, then review delivery and argument quality in the same workspace.</p>
+</div>
+""", unsafe_allow_html=True)
+
 user = st.sidebar.text_input('Local profile', 'me')
 try:
     load_records(user)
 except ValueError as exc:
     st.error(str(exc))
     st.stop()
+
+
+def panel_header(index, title, desc):
+    st.markdown(f'<p class="panel-label">Panel {index:02d}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="panel-title">{title}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="panel-desc">{desc}</p>', unsafe_allow_html=True)
 
 
 def timer_widgets(prefix):
@@ -43,7 +85,7 @@ def timer_widgets(prefix):
         minutes, seconds = divmod(whole_seconds, 60)
         fraction = whole_seconds / max(total, 1)
         angle = max(0, min(360, round(360 * fraction, 2)))
-        ring_color = '#ef4444' if whole_seconds <= 10 else '#6366f1'
+        ring_color = '#c45c4a' if whole_seconds <= 10 else '#c4b49a'
         label = "TIME'S UP" if whole_seconds == 0 else 'TIME REMAINING'
 
         placeholder.markdown(
@@ -55,16 +97,16 @@ def timer_widgets(prefix):
                           background:conic-gradient({ring_color} {angle}deg,
                                                      rgba(128,128,128,.18) {angle}deg 360deg);">
                 <div style="width:100%;height:100%;border-radius:50%;
-                            background:var(--secondary-background-color, #f4f5f9);
+                            background:#15181f;
                             display:flex;flex-direction:column;align-items:center;
                             justify-content:center;">
                   <div style="font-size:43px;font-weight:750;line-height:1.15;
                               font-variant-numeric:tabular-nums;
-                              color:var(--text-color, #202125);">
+                              color:#f2efe8;">
                     {minutes:02d}:{seconds:02d}
                   </div>
                   <div style="font-size:11px;letter-spacing:1.5px;margin-top:9px;
-                              font-weight:650;color:var(--text-color, #202125);opacity:.7;">
+                              font-weight:650;color:#9aa0ab;">
                     {label}
                   </div>
                 </div>
@@ -92,7 +134,7 @@ def transcript_notice():
 def require_calibration(button_key):
     if 'baseline' in st.session_state:
         st.caption(f'Microphone baseline: {st.session_state.baseline:.1f} dBFS')
-    if st.button('🎚️ Calibrate microphone (5 seconds)', key=f'calibrate_microphone_{button_key}'):
+    if st.button('Calibrate microphone (5 seconds)', key=f'calibrate_microphone_{button_key}'):
         try:
             with st.spinner('Speak normally into the microphone for five seconds'):
                 audio = sd.rec(5 * SAMPLE_RATE, samplerate=SAMPLE_RATE, channels=1, dtype='int16')
@@ -145,14 +187,17 @@ def finish_debate(duel):
     duel['recap'] = recap
 
 
-debate_tab, practice_tab, progress_tab, history_tab = st.tabs(
-    ['🥊 AI Sparring', '🎙️ Speaking Coach', '📈 Progress', '🗂️ History'])
-
-with debate_tab:
-    st.subheader('Adaptive debate sparring')
-    st.write('Defend a position, respond to targeted objections, and train your weakest argument skills.')
+with st.sidebar:
+    st.markdown('### Microphone')
+    calibrated = require_calibration('workspace')
+    st.markdown('---')
     transcript_notice()
-    calibrated = require_calibration("sparring")
+
+sparring_col, coach_col = st.columns(2, gap='medium')
+
+with sparring_col, st.container(border=True):
+    panel_header(1, 'AI Sparring',
+                 'Defend a position, answer objections, and train the weakest part of the argument.')
     duel = st.session_state.get('duel')
     if duel and duel['user'] != user:
         st.info('You changed profiles. Start a new debate for this profile.')
@@ -172,7 +217,7 @@ with debate_tab:
 
         st.selectbox('Choose a debate topic', topic_pool, key='duel_topic')
         st.button(
-            '🎲 Generate New Debate Topic',
+            'Generate new debate topic',
             key='generate_new_debate_topic',
             on_click=generate_new_debate_topic,
         )
@@ -194,7 +239,7 @@ with debate_tab:
         if duel['challenge_focus'] != 'opening':
             st.caption(f'Challenge focus: {duel["challenge_focus"]}')
         st.caption(f'You will have {duel["seconds"]} seconds to respond.')
-        if st.button('🎤 Record my response', type='primary', disabled=not calibrated):
+        if st.button('Record my response', type='primary', disabled=not calibrated):
             try:
                 coach = capture(duel['seconds'])
                 transcript = coach.transcript_text().strip()
@@ -255,22 +300,20 @@ with debate_tab:
             st.session_state.pop('duel', None)
             st.rerun()
 
-with practice_tab:
-    st.subheader('Original speaking coach')
-    st.write('Your original random-topic speaking sessions and delivery analysis remain available.')
-    transcript_notice()
-    calibrated = require_calibration("speaking_coach")
+with coach_col, st.container(border=True):
+    panel_header(2, 'Speaking Coach',
+                 'Random-topic speaking sessions with delivery analysis.')
     category = st.selectbox('Topic category', list(CATEGORIES))
     key = 'practice_topic_' + category
     if key not in st.session_state:
         st.session_state[key] = pick_topic(category)
-    if st.button('🎲 Another practice topic'):
+    if st.button('Another practice topic'):
         st.session_state[key] = pick_topic(category, avoid=st.session_state[key])
     topic = st.session_state[key]
     st.info(topic)
     seconds = st.select_slider('Speaking time', options=[30, 60, 90, 120], value=60, key='practice_duration')
     save_text = st.checkbox('Save transcript locally', value=False, key='practice_save')
-    if st.button('🎤 Record practice speech', type='primary', disabled=not calibrated):
+    if st.button('Record practice speech', type='primary', disabled=not calibrated):
         try:
             coach = capture(seconds)
             with st.spinner('Preparing your speech report...'):
@@ -284,13 +327,17 @@ with practice_tab:
         st.success(f'Practice saved: speeches/{user}/{result[2]}')
         st.markdown(result[1]['report'])
 
-with progress_tab:
+st.markdown('<div style="height:0.7rem"></div>', unsafe_allow_html=True)
+progress_col, history_col = st.columns(2, gap='medium')
+
+with progress_col, st.container(border=True):
+    panel_header(3, 'Progress',
+                 'Delivery metrics and argument rubric across saved sessions.')
     records = load_records(user)
-    st.subheader('All speaking sessions')
     show_dashboard(records)
     debates = [r for r in records if r.get('mode') == 'debate']
     if debates:
-        st.markdown('### Argument rubric over time')
+        st.markdown('**Argument rubric over time**')
         import pandas as pd
         rows = []
         for session in debates:
@@ -306,14 +353,15 @@ with progress_tab:
         st.line_chart(chart)
         st.caption('AI rubric ratings are subjective, not standardized assessment scores.')
 
-with history_tab:
-    st.subheader('Saved sessions')
+with history_col, st.container(border=True):
+    panel_header(4, 'History',
+                 'Saved debates and practice sessions for this profile.')
     records = load_records(user)
     if not records:
         st.info('No sessions saved yet. Complete a practice session or a debate.')
     for item in reversed(records):
         name = item['_filename']
-        kind = '🥊 Debate' if item.get('mode') == 'debate' else '🎙️ Practice'
+        kind = 'Debate' if item.get('mode') == 'debate' else 'Practice'
         with st.expander(f'{kind} · {item.get("when", "")} · {item.get("topic", "")}'):
             st.markdown(item.get('report', 'No report.'))
             st.json(item.get('summary', {}))
