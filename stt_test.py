@@ -20,7 +20,7 @@ API_KEY = os.environ["CARTESIA_API_KEY"]
 SAMPLE_RATE = 16000        # Hz, what we send to Cartesia
 CHUNK_MS = 100             # send audio in 100 ms pieces
 FINALIZE_EVERY = 2.0       # seconds; how often we ask for a transcript
-DEBUG = True               # prints every raw message from Cartesia (leave on for the first run)
+DEBUG = False               # prints every raw message from Cartesia (leave on for the first run)
 
 URL = (
     "wss://api.cartesia.ai/stt/websocket"
