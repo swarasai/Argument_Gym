@@ -1,9 +1,13 @@
 """
 Step 3: live speech coaching in the terminal.
 
-Run:  python coach_test.py     (Ctrl+C to stop; saves a session file in ./sessions)
+Run:  python coach_test.py                 (Ctrl+C to stop; saves a session file in ./sessions)
+      python coach_test.py --coherence     (also asks Claude for a rough coherence score at the
+                                            end; this sends the transcript text to Claude once
+                                            and does not save it)
 """
 
+import argparse
 import asyncio
 import json
 import os
@@ -112,12 +116,30 @@ async def stream(coach):
 
 
 if __name__ == "__main__":
-    coach = Coach(baseline_db=calibrate())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--coherence",
+        action="store_true",
+        help="at the end, ask Claude for a rough 1-5 coherence score (sends transcript text to Claude once; not saved)",
+    )
+    args = parser.parse_args()
+    if args.coherence:
+        print(
+            "Coherence check is ON: the transcript text will be sent to Claude once, at the end "
+            "of the session, for a rough 1-5 score. The text is not saved to disk.\n"
+        )
+
+    coach = Coach(baseline_db=calibrate(), keep_text=args.coherence)
     try:
         asyncio.run(stream(coach))
     except KeyboardInterrupt:
         pass
     finally:
+        if args.coherence:
+            from coherence import rate_coherence
+
+            print("\nAsking Claude for a rough coherence score...")
+            coach.extra["coherence"] = rate_coherence(coach.transcript_text())
         print("\nSession summary:")
         print(json.dumps(coach.summary(), indent=2))
         print("Saved to", coach.save())

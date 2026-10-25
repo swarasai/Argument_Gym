@@ -1,2 +1,17 @@
 .env
 .venv
+# API credentials
+.env
+.venv/
+venv/
+.streamlit/secrets.toml
+
+# Generated files
+__pycache__/
+*.pyc
+.DS_Store
+
+# Private speech data
+speeches/
+sessions/
+practice/

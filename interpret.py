@@ -132,7 +132,7 @@ TEST_CASES = [
     ("how mush is dat", "ordering coffee at a cafe"),
     ("uh", "ordering coffee at a cafe"),
     ("I will units.", "casual conversation"),  # meant: I really love unit 3
-       ("Can I go? large oat milk latte. Okay.", "ordering coffee at a cafe"),  # meant: Can I get a large oat milk latte
+    ("Can I go? large oat milk latte. Okay.", "ordering coffee at a cafe"),  # meant: Can I get a large oat milk latte
    ("I'd. Like, Ike, a a chocolate.", "ordering coffee at a cafe"),  # meant: I'd like a small hot chocolate
    ("But where? is the bathroom.", "ordering coffee at a cafe"),  # meant: Where is the bathroom
    ("I'll pay with my my card.", "ordering coffee at a cafe"),  # meant: I'll pay with my card
