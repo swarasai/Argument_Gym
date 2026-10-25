@@ -3,3 +3,4 @@ pycparser==3.12
 python-dotenv==1.2.4
 sounddevice==0.5.6
 websockets==17.3
+anthropic
