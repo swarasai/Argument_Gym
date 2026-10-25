@@ -22,7 +22,7 @@ try:  # fixes the Mac "CERTIFICATE_VERIFY_FAILED" error if certifi is installed
 
     SSL_CTX = ssl.create_default_context(cafile=certifi.where())
 except ImportError:
-    SSL_CTX = None
+    SSL_CTX = ssl.create_default_context()
 
 load_dotenv()
 API_KEY = os.environ["CARTESIA_API_KEY"]
